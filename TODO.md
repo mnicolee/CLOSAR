@@ -1,7 +1,31 @@
 # TODO
 
 Items in **Priority** below must be addressed before anything in Later.
-Covers all three repos: `OSAR-Nicole-version`, `CLOSAR`, `DrosoClimb`.
+Covers all three repos, all under `C:\Users\user\Documents\GitHub\`:
+`OSAR-Nicole-version`, `CLOSAR`, `DrosoClimb`.
+
+---
+
+## ⚠ READ BEFORE TOUCHING ANYTHING — Dropbox rule
+
+Data lives in `D:\ACC Lab Dropbox\ACC Lab\Nicole Lee\` and files there are **online-only**.
+Anything that reads a file or enumerates a directory makes Dropbox hydrate (download) it, and
+**the download cannot be cancelled**. This has already happened twice by accident.
+
+**Never, against any Dropbox path:**
+
+- `os.listdir`, `glob`, `Path.iterdir`, `os.walk` — no directory enumeration in Python
+- Git Bash `ls` — Cygwin `ls` opens every entry to test for symlinks, which hydrates it
+- executing notebook cells, or any script whose code touches those paths
+- reading a file to "verify" something
+
+**Verify notebooks by parsing and compiling only** (`json.load`, `compile`) — never by running
+them. If a directory listing is genuinely unavoidable, use PowerShell
+`Get-ChildItem <path> -Directory -Name`, which reads directory metadata natively and was
+verified not to hydrate. `Rename-Item` is metadata-only and safe. Ask the user first.
+
+Everything below can be done **without touching Dropbox at all** — it is all repo-local file
+edits.
 
 ---
 
