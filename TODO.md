@@ -5,9 +5,23 @@ Covers all three repos: `OSAR-Nicole-version`, `CLOSAR`, `DrosoClimb`.
 
 ---
 
-## Priority 0 — do this first, before anything else
+## Priority 0 — START HERE. Nothing else until this is done.
 
-### DrosoClimb `Dev` branch is broken
+### DrosoClimb `Dev` branch is broken right now
+
+**Steps**
+
+1. `git -C DrosoClimb checkout Dev`
+2. In the 8 notebooks below, replace `Falling_New` with `Climbing_New`.
+3. In the 6 that use it, repoint the font path to `fonts` (`font_dirs = ["fonts"]` /
+   `font_path = "fonts"`).
+4. Copy in `fonts/` (18 Inter TTFs), `NLProcessing.py`, `MBONlist.csv`, `vortexmap.py` —
+   all present on `Dev_AsOPN3` and in the other two repos.
+5. Commit and push `Dev`.
+6. Then `Dev_AsOPN3` pulls from `Dev`. **Check the merge carefully** — see the divergence
+   warning below.
+
+**Why it is broken**
 
 The Dropbox folder `Data Compilation\Falling_New\` was renamed to `Climbing_New\` on
 2026-08-05, and the font path moved to a local `fonts\` folder. Those fixes were applied to
