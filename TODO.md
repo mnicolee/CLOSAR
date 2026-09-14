@@ -33,6 +33,12 @@ edits.
 
 ### DrosoClimb `Dev` branch is broken right now
 
+> **CLOSED 2026-09-14 except step 5 (commit and push `Dev`).** Verified on the lab machine:
+> `fonts/`, `NLProcessing.py`, `MBONlist.csv` and `vortexmap.py` are all present, `font_dirs = ["fonts"]`
+> is in 7 notebooks, and `Climbing_New` is in 15. The last `Falling_NEW` straggler
+> (`2. Fileprocessing` `savefolder`) went with the rename pass below. Step 6 (`Dev_AsOPN3` pull)
+> is out of scope for now — Nicole's call, eOPN3 untouched.
+
 **Steps**
 
 1. `git -C DrosoClimb checkout Dev`
@@ -147,7 +153,14 @@ Also dead now: in CLOSAR `Climbing-OSAR vortexmaps.ipynb` cell 1, the line
 worked (`from vortexmap import *` leaves the function reading vortexmap's globals, not the
 notebook's). It already passes `metrics=OSAR_METRICS` explicitly, so the line can just go.
 
-### 1f-2. Merge `NLMATH` + `NLGRAPHS` into `NLCLIMB` (DrosoClimb) — ON HOLD
+### 1f-2. Merge `NLMATH` + `NLGRAPHS` into `NLCLIMB` (DrosoClimb) — ~~ON HOLD~~ **DONE**
+
+> **Done in commit `69fbfcb` (2026-08-17), noticed 2026-09-14.** `NLGRAPHS.py` (816 lines) and
+> `NLMATH.py` (979 lines) deleted; `NLCLIMB.py` grew to 46 functions. Every `NLCLIMB.*` call in the
+> notebooks resolves — the only dangling name is `rastergraph`, and both its call sites are
+> commented out in `Generic line plots.ipynb`. This also closes **D5** (`NLMATH.deltaversion`,
+> called 6× and defined nowhere — it is now `NLCLIMB.deltaversion_deltag`, 16 calls, resolves)
+> and the §12 step 1-2 fork question in `REORG_PLAN.md`: there is one module now, not two.
 
 Decided to do this, then paused. **Do not delete the dead functions yet** — leave them in place.
 
@@ -306,6 +319,21 @@ including OSAR's still-outstanding `METRICS` argument (see 1f).
 
 ### 1f-8. `Testing vortexmaps.ipynb` (DrosoClimb) — WRITTEN BUT NEVER RUN
 
+**Rewritten 2026-09-14 — still not run.** The original had a bug that guaranteed failure: its
+climbing half globbed `_bootstrap.csv` inside `2025deltagcollection`, which holds 94
+`*_deltag_allstats.csv` and zero bootstrap files, so `climbfiles[0]` raised `IndexError`. The
+climbing folder is wide-format (metrics as column pairs, no `Metric`/`Light_Intensity`/CI
+columns) and `load_bootstrap_data` cannot read it at all — climbing comes back here only after
+file regeneration into the OSAR long format.
+
+Now an equivalence harness on OSAR data only, 10 code cells: schema check (one file) → verbatim
+reference copies of `_sample_bootstrap`/`_spiralize` from `Preloaded Vortexmap.ipynb` cell 2 →
+module load → **exact comparison of reference vs module across every metric × MBON** →
+quantify the deliberate centre-annotation difference (mean(long_ranks) vs Hedges' g, item 1
+above) → `resolve_order`/`create_labels`/`create_mbon_only_labels` → two figures for 1f-6.
+
+Static check done: all 10 cells compile, every `vortexmap.*` and `NLProcessing.*` name resolves.
+
 Created 2026-08-16 to verify the rewritten `vortexmap.py` against real data. **Claude did not
 execute it — the Dropbox rule forbids it, since `load_bootstrap_data` calls `os.listdir` on the
 data folder.** Nicole to run.
@@ -335,6 +363,57 @@ Paths used, temporary and repo-local for now:
 `os.listdir(data_path)` — with `data_path` pointing into Dropbox, calling it hydrates the folder.
 See the Dropbox rule above. Consider accepting an explicit file list instead.
 
+### 1h. `homecomp` path still points at the old Dropbox root — UPDATE NEEDED
+
+Done 2026-09-14 in DrosoClimb: the machine block now carries the **full** Dropbox user root
+(not just the drive prefix), because the lab machine's root differs in every segment.
+
+| var | value | state |
+|---|---|---|
+| `labcomp` | `C:\Users\User\NUS Dropbox\acclab\Nicole M Lee` | **current, verified on the lab machine** |
+| `homecomp` | `D:\ACC Lab Dropbox\ACC Lab\Nicole Lee` | ⚠ **stale — needs updating to the NUS Dropbox path** |
+| `laptop` | `C:\Users\lnico\ACC Lab Dropbox\ACC Lab\Nicole Lee` | left as-is for now, deliberately |
+
+All downstream path strings are now relative to that root (`"\Data Compilation\Climbing_New\\"`),
+so switching machines is a one-line change to `specifiedpath`. Update `homecomp` on the home
+machine once its Dropbox root is known — the segment `ACC Lab Dropbox\ACC Lab\Nicole Lee` is
+likely `NUS Dropbox\acclab\Nicole M Lee` there too, but confirm it on that machine rather than
+guessing.
+
+Also unresolved: `Countingfiles.ipynb` uses `filenumberfolder = "\MBON thinks\numbers\\"`, and
+`MBON thinks` **does not exist** anywhere under the lab Dropbox root. Find where it went, or
+whether it was ever synced.
+
+---
+
+### 1i. New climbing notebooks — WRITTEN, NOT RUN
+
+Three notebooks were written or rebuilt on 2026-09-14 and **none has been executed** (Dropbox
+rule). All parse and compile; every `NLProcessing.*` / `vortexmap.*` name they call resolves.
+
+| Notebook | State |
+|---|---|
+| `Testing vortexmaps.ipynb` | rebuilt as an inline-vs-module equivalence harness — see 1f-8 |
+| `Heatmap3.ipynb` | new. Sections 1 ACR / 2 Chrimson2 / 3 both / 4 specific MBON list / 5 differenced, each with a heatmap **and** a clustermap |
+| `Scatter_pairplot.ipynb` | new. The neurotransmitter swarm + `sns.pairplot`, taken out of `Heatmappotofu_1` |
+
+`Heatmap3` supersedes `Heatmap2_withnoclassifications.ipynb` and `Heatmappotofu_1.ipynb`, which are
+still in the repo untouched — delete them once the new ones have been run and the figures checked.
+Those two shared 17 duplicated cells (5 byte-identical), and the `#lobe location` block appeared 3×
+inside `Heatmappotofu_1` alone.
+
+Three deliberate changes from the original code, all needing an eyeball on first run:
+
+- Frame lines were hardcoded (`axhline(y=4)`, `y=92`, `axvline(x=17)`, `x=11`); now `len(df60_other)`
+  and `len(df60_other.columns)` so they fit whichever section runs.
+- The differenced section sliced columns positionally (`iloc[:,:-2]`, `iloc[:,0:12]`); now drops
+  `['MBON','responder','genotypeandresponder']` by name, since `cols_only` carries 7 metrics not 12.
+- The clustermap index is `MBON; Name; Lobe; responder` — without the responder suffix section 3's
+  two rows per MBON collide on one label.
+
+The heatmap and clustermap bodies are Nicole's code verbatim, wrapped as `plot_heatmap()` and
+`plot_clustermap()` so five sections do not need five copies of ~110 lines.
+
 ---
 
 ## Later
@@ -348,6 +427,36 @@ See the Dropbox rule above. Consider accepting an explicit file list instead.
   notebooks.
 - `2. Multi-OSAR file processing.ipynb` still sits alongside the "new" one.
 - README for each repo.
+
+---
+
+## Done (2026-09-14) — DrosoClimb `Dev`, all uncommitted
+
+- **`Falling` → `Climbing` finished in DrosoClimb.** 40 lines across 12 files. The 2026-08-17 push had
+  converted `Falling_New` → `Climbing_New` only; `git log -S "DATA\Falling" --all` returns **nothing**,
+  so the other two roots had never been edited on any branch. Fixed: `DATA\Falling\Falling_ACR`
+  and `Falling_Chrimson2` → `Climbing\Climbing_*`, `2025 Complete raw values osar falling` →
+  `…osar climbing`, `Falling_2026*.xlsx` → `Climbing_*`, `FALLING_clustermap_*` → `CLIMBING_*`,
+  plus comments, headings and docstrings. `fallingocc` left alone per D9.
+- **Verified against the real Dropbox** (PowerShell metadata only, no hydration): `DATA\Climbing\`
+  holds `Climbing_ACR` and `Climbing_Chrimson2`; `Data Compilation\` holds `Climbing_New`,
+  `2025 Complete raw values osar climbing` and `Totalosarclimbing`. The renames are real.
+  **`eOPN3 manuscript\Data\Falling` is still `Falling`** — that one rename was reverted.
+- **Reverted at Nicole's request:** `2025fallingtoosarcomp`, the `_Δg_Falling` column names in
+  `LinReg` cell 16, `fallingsonly`, `dffallingtypes`, and `(falling data)`.
+- **Machine-path block rebuilt.** `specifiedpath` now carries the **full** Dropbox user root, because
+  the lab machine differs in every segment, not just the drive letter. `labcomp` added
+  (`C:\Users\User\NUS Dropbox\acclab\Nicole M Lee`), all downstream strings made relative to it, and
+  the 11 hardcoded `D:\…` absolutes converted to `specifiedpath + …` so they follow the switch.
+  Blocks added to `Control Fly Analysis`, `Directionality Analysis` and `Fly Track Demo`, which had
+  none. 27 dead `officecomp` / `workcomp` lines removed (`1. Renamingfiles` excepted — eOPN3, and the
+  one place `workcomp` is actually referenced). Every resulting path was checked to resolve. See 1h.
+- **Notebooks written/rebuilt:** `Testing vortexmaps`, `Heatmap3`, `Scatter_pairplot`. See 1i.
+- **Confirmed the vortexmap maths matches** between `Preloaded Vortexmap` cell 2 and `vortexmap.py`:
+  `_sample_bootstrap` and `_spiralize` are identical bar formatting and argument order. The only
+  difference is the annotated centre value — `mean(long_ranks)` vs Hedges' g — which is item 1 above
+  and deliberate. Two traps when switching: `sort_by` means *columns* inline but *rows* in the
+  module, and the defaults differ (`n=21, cmap='vlag'` vs `n=11, cmap='coolwarm'`).
 
 ---
 
